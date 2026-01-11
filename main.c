@@ -12,6 +12,9 @@ Description: Create a console app for this functions. The app should be optimize
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+
+#define FILE_NAME "students.txt"
 
 typedef struct {
     int id;
@@ -19,12 +22,69 @@ typedef struct {
     char surname[50];
 } Student;
 
+int isValidName(const char *name) {
+    if (name[0] == '\0') {
+        return 0;
+    }
+
+    for (int i = 0; name[i] != '\0'; i++) {
+        if (isdigit((unsigned char)name[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+void saveToFile(Student *students, int count) {
+    FILE *file = fopen(FILE_NAME, "w");
+    if (file == NULL) {
+        printf("There was problem when saving to the file.\n");
+        return;
+    }
+    for (int i = 0; i < count; i++) {
+        fprintf(file, "%d %s %s\n", students[i].id, students[i].name, students[i].surname);
+    }
+    fclose(file);
+}
+
+int loadFromFile(Student **students, int *capacity) {
+    FILE *file = fopen(FILE_NAME, "r");
+    if (file == NULL) {
+        return 0;
+    }
+
+    int count = 0;
+    while (1) {
+        if (count >= *capacity) {
+            *capacity *= 2;
+            Student *temp = (Student *)realloc(*students, (*capacity) * sizeof(Student));
+            if (temp == NULL) {
+                break;
+            }
+
+            *students = temp;
+        }
+
+        if (fscanf(file, "%d %s %s", &(*students)[count].id, (*students)[count].name, (*students)[count].surname) != 3) {
+            break;
+        }
+        count++;
+    }
+
+    fclose(file);
+    return count;
+}
+
 Student *students;
 
 int main() {
     int Capacity = 10;
-    int StudentCount = 0;
     students = (Student *)malloc(Capacity * sizeof(Student));
+    int StudentCount = loadFromFile(&students, &Capacity);
+
+    if (StudentCount > 0) {
+        printf("Loaded %d students from the file.\n", StudentCount);
+    }
 
     while (1) {
         printf("\nStudent Manager\n1. Add student\n2. Delete student\n3. Show students\n4. Update student\n5. Exit\nSelect: ");
@@ -48,11 +108,28 @@ int main() {
                 }
                 
                 students[StudentCount].id = StudentCount + 1;
-                printf("Enter name: ");
-                scanf("%s", students[StudentCount].name);
-                printf("Enter surname: ");
-                scanf("%s", students[StudentCount].surname);
+                
+                while (1) {
+                    printf("Enter name: ");
+                    scanf("%s", students[StudentCount].name);
+                    if (isValidName(students[StudentCount].name)) {
+                        break;
+                    }
+                    printf("Invalid name.\n");
+                }
+
+                while (1) {
+                    printf("Enter surname: ");
+                    scanf("%s", students[StudentCount].surname);
+                    if (isValidName(students[StudentCount].surname)) {
+                        break;
+                    }
+                    printf("Invalid surname.\n");
+                }
+                
                 StudentCount++;
+                saveToFile(students, StudentCount);
+                printf("Student added successfully.\n");
                 break;
 
             case 2:
@@ -70,6 +147,8 @@ int main() {
                         
                         StudentCount--;
                         printf("Deleted.\n");
+
+                        saveToFile(students, StudentCount);
 
                         if (Capacity > 10 && StudentCount <= Capacity / 4) {
                             Capacity /= 2;
@@ -102,10 +181,25 @@ int main() {
                 }
                 for (int i = 0; i < StudentCount; i++) {
                     if (students[i].id == StudentID_Update) {
-                        printf("New name: ");
-                        scanf("%s", students[i].name);
-                        printf("New surname: ");
-                        scanf("%s", students[i].surname);
+                        while (1) {
+                            printf("New name: ");
+                            scanf("%s", students[i].name);
+                            if (isValidName(students[i].name)) {
+                                break;
+                            }
+                            printf("Invalid name.\n");
+                        }
+
+                        while (1) {
+                            printf("New surname: ");
+                            scanf("%s", students[i].surname);
+                            if (isValidName(students[i].surname)) {
+                                break;
+                            }
+                            printf("Invalid surname.\n");
+                        }
+                        saveToFile(students, StudentCount);
+                        printf("Student updated successfully.\n");
                         break;
                     }
                 }
