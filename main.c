@@ -92,15 +92,27 @@ void addStudent(Student **students, int *count, int *capacity) {
         (*students)[*count].id = (*students)[*count - 1].id + 1;
     }
 
+    char buffer[100];
     while (1) {
         printf("Enter Name: ");
-        if (scanf("%s", (*students)[*count].name) != 1) {
-            printf("Wrong input!\n");
+        if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
             clearInputBuffer();
             continue;
         }
-        if (isNameValid((*students)[*count].name)) {
-            fixCase((*students)[*count].name);
+
+        size_t len = strlen(buffer);
+        if (len > 0 && buffer[len - 1] == '\n') {
+            buffer[len - 1] = '\0';
+        }
+
+        if (buffer[0] == '\0') {
+            printf("Wrong input!\n");
+            continue;
+        }
+
+        if (isNameValid(buffer)) {
+            fixCase(buffer);
+            strcpy((*students)[*count].name, buffer);
             break;
         } else {
             printf("Error: Only letters allowed!\n");
@@ -109,14 +121,24 @@ void addStudent(Student **students, int *count, int *capacity) {
 
     while (1) {
         printf("Enter Surname: ");
-        if (scanf("%s", (*students)[*count].surname) != 1) {
+        if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+             clearInputBuffer();
+             continue;
+        }
+
+        size_t len = strlen(buffer);
+        if (len > 0 && buffer[len - 1] == '\n') {
+            buffer[len - 1] = '\0';
+        }
+
+        if (buffer[0] == '\0') {
             printf("Wrong input!\n");
-            clearInputBuffer();
             continue;
         }
 
-        if (isNameValid((*students)[*count].surname)) {
-            fixCase((*students)[*count].surname);
+        if (isNameValid(buffer)) {
+            fixCase(buffer);
+            strcpy((*students)[*count].surname, buffer);
             break;
         } else {
             printf("Error: Only letters allowed!\n");
@@ -125,12 +147,37 @@ void addStudent(Student **students, int *count, int *capacity) {
 
     while (1) {
         printf("Enter Age: ");
-        if (scanf("%d", &(*students)[*count].age) != 1) {
-            printf("Error: Enter a number for age!\n");
+        if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
             clearInputBuffer();
             continue;
         }
-        if ((*students)[*count].age >= 6 && (*students)[*count].age <= 100) {
+
+        size_t len = strlen(buffer);
+        if (len > 0 && buffer[len - 1] == '\n') {
+            buffer[len - 1] = '\0';
+        }
+        
+        if (buffer[0] == '\0') {
+            printf("Wrong input!\n");
+            continue;
+        }
+
+        int isNum = 1;
+        for (int i = 0; buffer[i] != '\0'; i++) {
+            if (!isdigit(buffer[i])) {
+                isNum = 0;
+                break;
+            }
+        }
+
+        if (!isNum) {
+            printf("Error: Age must be a number!\n");
+            continue;
+        }
+
+        int val = atoi(buffer);
+        if (val >= 6 && val <= 100) {
+            (*students)[*count].age = val;
             break;
         } else {
             printf("Error: Age must be between 6 and 100!\n");
@@ -140,7 +187,6 @@ void addStudent(Student **students, int *count, int *capacity) {
     (*count)++;
     saveToFile(*students, *count);
     printf("Successfully added!\n");
-    clearInputBuffer();
 }
 
 void showStudents(Student *students, int count) {
@@ -158,10 +204,25 @@ void showStudents(Student *students, int count) {
 
 void deleteStudent(Student *students, int *count) {
     int id;
+    char buffer[50];
     printf("Enter ID to delete: ");
-    if (scanf("%d", &id) != 1) {
+    
+    if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+        return;
+    }
+    
+    size_t len = strlen(buffer);
+    if (len > 0 && buffer[len - 1] == '\n') {
+        buffer[len - 1] = '\0';
+    }
+    
+    if (buffer[0] == '\0') {
+         printf("Wrong input!\n");
+         return;
+    }
+    
+    if (sscanf(buffer, "%d", &id) != 1) {
         printf("Invalid ID!\n");
-        clearInputBuffer();
         return;
     }
 
@@ -187,10 +248,25 @@ void deleteStudent(Student *students, int *count) {
 
 void updateStudent(Student *students, int count) {
     int id;
+    char buffer[100];
+
     printf("Enter ID to update: ");
-    if (scanf("%d", &id) != 1) {
+    if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+        return;
+    }
+
+    size_t len = strlen(buffer);
+    if (len > 0 && buffer[len - 1] == '\n') {
+        buffer[len - 1] = '\0';
+    }
+
+    if (buffer[0] == '\0') {
+         printf("Wrong input!\n");
+         return;
+    }
+
+    if (sscanf(buffer, "%d", &id) != 1) {
         printf("Invalid ID!\n");
-        clearInputBuffer();
         return;
     }
 
@@ -201,31 +277,86 @@ void updateStudent(Student *students, int count) {
 
             while (1) {
                 printf("New Name: ");
-                scanf("%s", students[i].name);
-                if (isNameValid(students[i].name)) {
-                    fixCase(students[i].name);
+                if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
                     break;
                 }
-                printf("Error: Only letters allowed!\n");
+                
+                size_t len = strlen(buffer);
+                if (len > 0 && buffer[len - 1] == '\n') {
+                    buffer[len - 1] = '\0';
+                }
+
+                if (buffer[0] == '\0') {
+                    break;
+                }
+
+                if (isNameValid(buffer)) {
+                    fixCase(buffer);
+                    strcpy(students[i].name, buffer);
+                    break;
+                } else {
+                    printf("Error: Only letters allowed!\n");
+                }
             }
 
             while (1) {
                 printf("New Surname: ");
-                scanf("%s", students[i].surname);
-                if (isNameValid(students[i].surname)) {
-                    fixCase(students[i].surname);
+                if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
                     break;
                 }
-                printf("Error: Only letters allowed!\n");
+                
+                size_t len = strlen(buffer);
+                if (len > 0 && buffer[len - 1] == '\n') {
+                    buffer[len - 1] = '\0';
+                }
+
+                if (buffer[0] == '\0') {
+                    break;
+                }
+
+                if (isNameValid(buffer)) {
+                    fixCase(buffer);
+                    strcpy(students[i].surname, buffer);
+                    break;
+                } else {
+                    printf("Error: Only letters allowed!\n");
+                }
             }
 
             while (1) {
                 printf("New Age: ");
-                if (scanf("%d", &students[i].age) == 1 && students[i].age >= 6 && students[i].age <= 100) {
+                if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
                     break;
                 }
-                printf("Error: Age must be a number between 6 and 100!\n");
-                clearInputBuffer();
+
+                size_t len = strlen(buffer);
+                if (len > 0 && buffer[len - 1] == '\n') {
+                    buffer[len - 1] = '\0';
+                }
+
+                if (buffer[0] == '\0') {
+                    break;
+                }
+
+                int isNum = 1;
+                for (int k = 0; buffer[k] != '\0'; k++) {
+                    if (!isdigit(buffer[k])) {
+                        isNum = 0;
+                        break;
+                    }
+                }
+
+                if (isNum) {
+                    int val = atoi(buffer);
+                    if (val >= 6 && val <= 100) {
+                        students[i].age = val;
+                        break;
+                    } else {
+                        printf("Error: Age must be between 6 and 100!\n");
+                    }
+                } else {
+                    printf("Error: Enter a valid number!\n");
+                }
             }
 
             saveToFile(students, count);
@@ -237,8 +368,6 @@ void updateStudent(Student *students, int count) {
     if (!found) {
         printf("Student not found!\n");
     }
-
-    clearInputBuffer();
 }
 
 int main() {
@@ -266,9 +395,23 @@ int main() {
         printf("5. Exit\n");
         printf("Select: ");
 
-        if (scanf("%d", &choice) != 1) {
+        char buffer[50];
+        if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+            continue;
+        }
+        
+        size_t len = strlen(buffer);
+        if (len > 0 && buffer[len - 1] == '\n') {
+            buffer[len - 1] = '\0';
+        }
+
+        if (buffer[0] == '\0') {
+             printf("Wrong input!\n");
+             continue;
+        }
+
+        if (sscanf(buffer, "%d", &choice) != 1) {
             printf("Please enter a number (1-5)!\n");
-            clearInputBuffer();
             continue;
         }
 
